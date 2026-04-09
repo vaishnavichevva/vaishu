@@ -3,12 +3,7 @@ pipeline {
 
     stages {
 
-        stage('Checkout from GitHub') {
-            steps {
-                git branch: 'master',
-                    url: 'https://github.com/laxmi916/node-k8s-app.git'
-            }
-        }
+        
 
         stage('Install Dependencies') {
             steps {
@@ -20,14 +15,15 @@ pipeline {
             steps {
                 sh '''
                 docker build -t my-k8s-app:${BUILD_NUMBER} .
-                docker tag my-k8s-app:${BUILD_NUMBER} laxmi916/my-k8s-app:latest
                 '''
             }
         }
 
-        stage('Push Docker Image') {
+        stage('Load Image into Minikube') {
             steps {
-                sh 'docker push laxmi916/my-k8s-app:latest'
+                sh '''
+                minikube image load my-node-k8s-app:latest
+                '''
             }
         }
 
