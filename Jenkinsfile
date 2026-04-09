@@ -22,7 +22,7 @@ pipeline {
         stage('Load Image into Minikube') {
             steps {
                 sh '''
-                minikube image load my-node-k8s-app:latest
+                minikube image load my-k8s-app:3
                 '''
             }
         }
