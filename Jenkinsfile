@@ -3,7 +3,11 @@ pipeline {
 
     stages {
 
-        
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
 
         stage('Install Dependencies') {
             steps {
@@ -13,42 +17,27 @@ pipeline {
 
         stage('Build Docker Image') {
             steps {
+                sh 'docker build -t my-k8s-app:4 .'
+            }
+        }
+
+        stage('Start Minikube') {
+            steps {
                 sh '''
-                docker build -t my-k8s-app:${BUILD_NUMBER} .
+                minikube status || minikube start --driver=docker
                 '''
             }
         }
 
         stage('Load Image into Minikube') {
             steps {
-                sh '''
-                minikube image load my-k8s-app:3
-                '''
-            }
-        }
-
-        stage('Start Minikube if not running') {
-            steps {
-                sh '''
-                if ! minikube status | grep -q "apiserver: Running"; then
-                    echo "Minikube is not running. Starting now..."
-                    minikube start --driver=docker --memory=2048 --cpus=2
-                fi
-                '''
+                sh 'minikube image load my-k8s-app:4'
             }
         }
 
         stage('Deploy to Kubernetes') {
             steps {
-                sh '''
-                # Load latest image into Minikube
-                # minikube image load laxmi916/my-k8s-app:latest
-
-                # Apply manifests
-                minikube kubectl -- apply -f k8s/deployment.yaml
-                minikube kubectl -- apply -f k8s/service.yaml
-                minikube service my-k8s-app-service
-                '''
+                sh 'kubectl apply -f k8s.yaml'
             }
         }
     }
